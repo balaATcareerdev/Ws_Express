@@ -38,8 +38,6 @@ matchesRouter.get("/", async (req, res) => {
       details: JSON.stringify(error),
     });
   }
-
-  res.status(200).json({ message: "Matches List" });
 });
 
 matchesRouter.post("/", async (req, res) => {
