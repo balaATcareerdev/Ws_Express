@@ -17,14 +17,14 @@ app.get("/", (req, res) => {
 
 app.use("/matches", matchesRouter);
 
-const { broadCaseMatchCreated } = attachWebSocketServer(server);
-app.locals.broadCaseMatchCreated = broadCaseMatchCreated;
+const { broadCastMatchCreated } = attachWebSocketServer(server);
+app.locals.broadCastMatchCreated = broadCastMatchCreated;
 
 server.listen(PORT, HOST, () => {
   const baseURL =
     HOST === "0.0.0.0" ? `http://localhost:${PORT}` : `http://${HOST}:${PORT}`;
   console.log(`Server is running on port ${baseURL}`);
   console.log(
-    `Websocket Server Running on Post ${baseURL.replace("http", "ws")}/ws`,
+    `Websocket Server Running on Port ${baseURL.replace("http", "ws")}/ws`,
   );
 });

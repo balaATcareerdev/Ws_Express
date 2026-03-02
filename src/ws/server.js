@@ -1,4 +1,4 @@
-import { WebSocketServer } from "ws";
+import { WebSocketServer, WebSocket } from "ws";
 
 function sendJson(socket, payload) {
   if (socket.readyState !== WebSocket.OPEN) {
@@ -10,7 +10,7 @@ function sendJson(socket, payload) {
 function broadcast(wss, payload) {
   for (const client of wss.clients) {
     if (client.readyState !== WebSocket.OPEN) {
-      return;
+      continue;
     }
     client.send(JSON.stringify(payload));
   }
@@ -29,9 +29,9 @@ export function attachWebSocketServer(server) {
     socket.on("error", console.error);
   });
 
-  function broadCaseMatchCreated(match) {
+  function broadCastMatchCreated(match) {
     broadcast(wss, { type: "match_created", data: match });
   }
 
-  return { broadCaseMatchCreated };
+  return { broadCastMatchCreated };
 }
