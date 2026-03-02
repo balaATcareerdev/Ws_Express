@@ -65,6 +65,10 @@ matchesRouter.post("/", async (req, res) => {
       })
       .returning();
 
+    if (res.app.locals.broadCaseMatchCreated) {
+      res.app.locals.broadCaseMatchCreated(event);
+    }
+
     res.status(201).json({
       data: event,
     });
