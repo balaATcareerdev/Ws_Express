@@ -19,31 +19,55 @@ function broadcast(wss, payload) {
 
 export function attachWebSocketServer(server) {
   const wss = new WebSocketServer({
-    server,
-    path: "/ws",
+    noServer: true,
     maxPayload: 1024 * 1024,
   });
 
-  wss.on("connection", async (socket, request) => {
+  // Handle WebSocket upgrade at HTTP level for Arcjet protection
+  server.on("upgrade", async (request, socket, head) => {
+    if (request.url !== "/ws") {
+      socket.destroy();
+      return;
+    }
+
     if (wsArcjet) {
       try {
         const decision = await wsArcjet.protect(request);
-        if (decision.isDenied) {
-          const code = decision.reason.isRateLimit ? 1013 : 1008; // 1013 for rate limit, 1008 for policy violation
+        if (decision.isDenied()) {
+          const statusCode = decision.reason.isRateLimit() ? 429 : 403;
+          const statusMessage = decision.reason.isRateLimit()
+            ? "Too Many Requests"
+            : "Forbidden";
 
-          const reason = decision.reason.isRateLimit
-            ? "Rate limit exceeded"
-            : "Access Denied";
-          socket.close(code, reason);
+          socket.write(
+            `HTTP/1.1 ${statusCode} ${statusMessage}\r\n` +
+              `Content-Type: text/plain\r\n` +
+              `Connection: close\r\n\r\n` +
+              statusMessage,
+          );
+          socket.destroy();
           return;
         }
       } catch (error) {
         console.error("Arcjet WebSocket Protection Error:", error);
-        socket.close(1011, "Server Security Error");
+        socket.write(
+          "HTTP/1.1 503 Service Unavailable\r\n" +
+            "Content-Type: text/plain\r\n" +
+            "Connection: close\r\n\r\n" +
+            "Service Unavailable",
+        );
+        socket.destroy();
         return;
       }
     }
 
+    // If allowed, proceed with WebSocket handshake
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      wss.emit("connection", ws, request);
+    });
+  });
+
+  wss.on("connection", (socket, request) => {
     socket.isAlive = true;
     socket.on("pong", () => {
       socket.isAlive = true;
