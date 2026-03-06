@@ -14,6 +14,14 @@ const MAX_LIMIT = 100;
 matchesRouter.get("/", async (req, res) => {
   const parsed = listMatchesQuerySchema.safeParse(req.query);
 
+  /**
+   * safe parse will return something like
+      * {
+        success: true,
+        data: { ...validatedData }
+    }
+   */
+
   if (!parsed.success) {
     return res
       .status(400)

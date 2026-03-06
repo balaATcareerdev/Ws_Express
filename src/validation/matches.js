@@ -48,7 +48,7 @@ const createMatchSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "endTime must be chronologically after startTime",
-        path: ["endTime"],
+        path: ["endTime"], // which field has the issue
       });
     }
   });
